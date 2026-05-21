@@ -75,6 +75,107 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ==========================================================================
+  // 1b. SISTEMA DE NOTIFICACIONES PROGRAMADAS (Notification API + setTimeout)
+  // ==========================================================================
+
+  const scheduledTimeouts = new Map(); // id -> timeoutId
+
+  function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function getCategoryTitle(category) {
+    const titles = {
+      importante: '⚠️ Recordatorio Importante',
+      habito: '🔁 Hábito Programado',
+      tarea: '✅ Tarea Pendiente',
+      idea: '💡 Idea Anotada',
+      nota: '📝 Nota Programada'
+    };
+    return titles[category] || '⏰ Recordatorio';
+  }
+
+  function fireAlarmNotification(reminder) {
+    // Sonido + toast en pantalla
+    playChime('bookingAlert');
+    showNotification(reminder.text);
+    if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 200, 500, 200, 100, 200]);
+
+    // Notificación del sistema (visible aunque la pestaña esté en segundo plano)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(getCategoryTitle(reminder.category), {
+              body: reminder.text,
+              icon: './icon-192.png',
+              badge: './icon-192.png',
+              tag: reminder.id,
+              requireInteraction: true
+            });
+          });
+        } else {
+          new Notification(getCategoryTitle(reminder.category), {
+            body: reminder.text,
+            icon: './icon-192.png',
+            tag: reminder.id
+          });
+        }
+      } catch (e) {
+        console.warn('Error mostrando notificación del sistema:', e);
+      }
+    }
+
+    // Marcar como alertado
+    const r = state.reminders.find(x => x.id === reminder.id);
+    if (r) { r.alerted = true; saveToLocalStorage(); updateUI(); }
+  }
+
+  function scheduleNotification(reminder) {
+    if (!reminder.dueDate) return;
+    cancelScheduledNotification(reminder.id);
+
+    const delayMs = new Date(reminder.dueDate).getTime() - Date.now();
+    if (delayMs <= 0) return;
+
+    const tid = setTimeout(() => {
+      fireAlarmNotification(reminder);
+      scheduledTimeouts.delete(reminder.id);
+    }, delayMs);
+    scheduledTimeouts.set(reminder.id, tid);
+
+    // Notificar también al Service Worker para cubrir PWA instalada
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SCHEDULE_NOTIFICATION',
+        id: reminder.id,
+        title: getCategoryTitle(reminder.category),
+        body: reminder.text,
+        dueDate: reminder.dueDate
+      });
+    }
+  }
+
+  function cancelScheduledNotification(id) {
+    if (scheduledTimeouts.has(id)) {
+      clearTimeout(scheduledTimeouts.get(id));
+      scheduledTimeouts.delete(id);
+    }
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CANCEL_NOTIFICATION', id });
+    }
+  }
+
+  function rescheduleAllPendingNotifications() {
+    const now = new Date().toISOString();
+    state.reminders.forEach(r => {
+      if (r.dueDate && r.dueDate > now && !r.alerted) scheduleNotification(r);
+    });
+  }
+
+  // ==========================================================================
   // 2. MOTOR DE SONIDO NATIVO (Web Audio API)
   // ==========================================================================
   
@@ -612,6 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Validar racha en la carga
       checkAndCalculateStreak();
       saveToLocalStorage();
+      rescheduleAllPendingNotifications();
       
     } catch (e) {
       console.error("Error cargando desde localStorage, reiniciando datos:", e);
@@ -1056,7 +1158,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     state.reminders.unshift(newReminder); // Agregar al inicio para visualización inmediata
-    
+
+    if (dueDate) {
+      requestNotificationPermission();
+      scheduleNotification(newReminder);
+    }
+
     // Play the user's selected alert tone on creation
     const toneKey = localStorage.getItem('remember_selected_tone') || 'chime';
     const toneMap = {
@@ -1099,6 +1206,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ...reminder,
       completedAt: new Date().toISOString()
     };
+
+    cancelScheduledNotification(reminder.id);
 
     // Celebrar!
     playChime('success');
@@ -1149,6 +1258,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (index === -1) return;
 
+      cancelScheduledNotification(id);
       if ('vibrate' in navigator) {
         navigator.vibrate([100, 50, 100]); // Vibración táctil de advertencia
       }
@@ -1188,6 +1298,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.completed.splice(index, 1);
     state.reminders.push(restoredReminder); // Enviar a activos
+
+    if (restoredReminder.dueDate && restoredReminder.dueDate > new Date().toISOString()) {
+      scheduleNotification(restoredReminder);
+    }
 
     playChime('create');
     

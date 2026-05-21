@@ -1,4 +1,4 @@
-const CACHE_NAME = 'remember-v8';
+const CACHE_NAME = 'remember-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -39,6 +39,52 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+// ==========================================================================
+// Alarmas programadas desde la app principal
+// ==========================================================================
+
+const swAlarms = new Map(); // id -> timeoutId
+
+self.addEventListener('message', (event) => {
+  const { type, id, title, body, dueDate } = event.data || {};
+
+  if (type === 'SCHEDULE_NOTIFICATION') {
+    if (swAlarms.has(id)) clearTimeout(swAlarms.get(id));
+    const delay = new Date(dueDate).getTime() - Date.now();
+    if (delay <= 0) return;
+    const tid = setTimeout(() => {
+      self.registration.showNotification(title, {
+        body,
+        icon: './icon-192.png',
+        badge: './icon-192.png',
+        tag: id,
+        requireInteraction: true
+      });
+      swAlarms.delete(id);
+    }, delay);
+    swAlarms.set(id, tid);
+  }
+
+  if (type === 'CANCEL_NOTIFICATION') {
+    if (swAlarms.has(id)) { clearTimeout(swAlarms.get(id)); swAlarms.delete(id); }
+    self.registration.getNotifications({ tag: id }).then(notifs => notifs.forEach(n => n.close()));
+  }
+});
+
+// Abrir la app al pulsar una notificación
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) return client.focus();
+      }
+      return clients.openWindow('./');
+    })
+  );
+});
+
+// ==========================================================================
 // Estrategia Network-First (Red primero, cae en caché si está offline)
 self.addEventListener('fetch', (e) => {
   // Evitar interceptar peticiones que no sean HTTP/HTTPS (por ejemplo, extensiones o esquemas chrome)
