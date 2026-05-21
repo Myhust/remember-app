@@ -1,0 +1,94 @@
+name: 🍎 Build Remember iOS App
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'ios-app/**'
+  workflow_dispatch:   # Manual trigger button in GitHub UI
+
+jobs:
+  build-ios:
+    name: Build & Package IPA
+    runs-on: macos-15   # Latest macOS with Xcode 16
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Select Xcode version ───────────────────────────────────
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      # ── 3. Show SDK & build info ──────────────────────────────────
+      - name: Print environment info
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i iphone
+
+      # ── 4. Build (compile only, no signing needed for IPA) ────────
+      - name: Build for iOS device (unsigned)
+        run: |
+          xcodebuild archive \
+            -project ios-app/Acuerdate.xcodeproj \
+            -scheme Acuerdate \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/Remember.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            | xcpretty --color || xcodebuild archive \
+              -project ios-app/Acuerdate.xcodeproj \
+              -scheme Acuerdate \
+              -destination "generic/platform=iOS" \
+              -archivePath "$RUNNER_TEMP/Remember.xcarchive" \
+              CODE_SIGNING_ALLOWED=NO \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGN_IDENTITY="" \
+              DEVELOPMENT_TEAM=""
+
+      # ── 5. Package .app into unsigned .ipa ───────────────────────
+      - name: Create unsigned IPA
+        run: |
+          APP_PATH=$(find "$RUNNER_TEMP/Remember.xcarchive/Products" -name "*.app" | head -1)
+          echo "Found .app at: $APP_PATH"
+          
+          mkdir -p /tmp/IPA_Payload/Payload
+          cp -r "$APP_PATH" /tmp/IPA_Payload/Payload/
+          
+          cd /tmp/IPA_Payload
+          zip -r Remember-unsigned.ipa Payload/
+          
+          echo "IPA created successfully!"
+          ls -lh Remember-unsigned.ipa
+
+      # ── 6. Upload IPA as GitHub artifact ─────────────────────────
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Remember-iOS-unsigned
+          path: /tmp/IPA_Payload/Remember-unsigned.ipa
+          retention-days: 7
+
+      # ── 7. Also verify compile on Simulator (optional) ────────────
+      - name: Verify build on iOS Simulator
+        run: |
+          xcodebuild build \
+            -project ios-app/Acuerdate.xcodeproj \
+            -scheme Acuerdate \
+            -destination "platform=iOS Simulator,name=iPhone 16,OS=latest" \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color || true
+
+      - name: Print success summary
+        run: |
+          echo "✅ Remember iOS app built successfully!"
+          echo "📦 Download the IPA from the Artifacts section of this workflow run."
+          echo ""
+          echo "📲 To install on iPhone 13 (without Mac):"
+          echo "   1. Download AltStore from: https://altstore.io"
+          echo "   2. Install AltServer on any Windows PC or Mac"
+          echo "   3. Open AltStore on iPhone → My Apps → + → select Remember-unsigned.ipa"
+          echo "   OR use SideStore (https://sidestore.io) for fully on-device sideloading"

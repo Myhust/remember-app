@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Remember — Continuous Reminders That Stick</title>
+  <meta name="description" content="A premium persistent reminders web application with voice input and automatic transcription. Designed to keep your daily goals visible until they are achieved.">
+  
+  <!-- Google Fonts: Outfit (Titulares) e Inter (Cuerpo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Archivo de estilos principal -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Soporte para PWA e Instalación en Teléfonos Móviles -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0B0C10">
+  
+  <!-- Favicon y atajos -->
+  <link rel="shortcut icon" href="icon-192.png" type="image/png">
+
+  <!-- Optimización específica para iOS y Android (iPhone / iPad / Móvil PWA) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Remember">
+  <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+  
+  <!-- Canvas para el efecto de confeti nativo de celebración -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="app-container">
+    <!-- CABECERA DE LA APP -->
+    <header class="app-header">
+      <div class="header-main">
+        <div class="logo-area">
+          <div class="logo-icon-wrapper">
+            <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 8v4l3 3"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>
+          </div>
+          <div class="logo-text">
+            <h1>Remember</h1>
+            <p class="tagline">Continuous reminders that stick</p>
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <!-- Indicador de Racha (Streak) -->
+          <div class="streak-badge" id="streakBadge" title="Días consecutivos cumpliendo recordatorios">
+            <svg class="streak-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"></path>
+              <path d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" fill="none" stroke="currentColor" stroke-width="2"></path>
+            </svg>
+            <span id="streakValue">0</span> <span class="streak-label">días en racha</span>
+          </div>
+          
+          <!-- Botón de Configurar Tono de Alerta -->
+          <button class="btn" id="soundSettingsBtn" title="Alert Tone Settings" aria-haspopup="dialog" style="padding: 0.75rem; border-radius: var(--radius-sm); border: var(--border-glass); background: rgba(255, 255, 255, 0.05); color: #00F2FE; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-right: 0.75rem; cursor: pointer; transition: all 0.3s ease;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+          </button>
+
+          <!-- Botón de Acción Principal -->
+          <button class="btn btn-primary" id="openDialogBtn" aria-haspopup="dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Nuevo Recordatorio</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- PANEL DE ESTADÍSTICAS (KPIs) -->
+    <section class="stats-container" aria-label="Estadísticas de rendimiento">
+      <div class="stat-card stat-active">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-num" id="statActiveCount">0</span>
+          <span class="stat-label">Activos hoy</span>
+        </div>
+      </div>
+      
+      <div class="stat-card stat-completed">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-num" id="statCompletedCount">0</span>
+          <span class="stat-label">Cumplidos en total</span>
+        </div>
+      </div>
+      
+      <div class="stat-card stat-efficiency">
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <span class="stat-num" id="statEfficiency">0%</span>
+          <span class="stat-label">Tasa de éxito</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-planet" id="planetCard" title="Tu Planeta de Hábitos: Refleja tu constancia y estado de tus hábitos en tiempo real">
+        <div class="planet-container">
+          <div class="planet-sphere state-inerte" id="planetSphere"></div>
+          <div class="planet-ring"></div>
+        </div>
+        <div class="stat-info">
+          <span class="stat-num" id="planetStatus">Inerte</span>
+          <span class="stat-label">Planeta de Hábitos</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CUERPO PRINCIPAL -->
+    <main class="main-content">
+      
+      <!-- SECCIÓN: RECORDATORIOS ACTIVOS (LA ENTRADA PERSISTENTE) -->
+      <section class="reminders-section" id="activeSection">
+        <div class="section-header">
+          <div class="section-header-left">
+            <h2 class="section-title">
+              <span class="pulse-indicator"></span>
+              Recordatorios Activos
+            </h2>
+            
+            <div class="view-toggle-wrapper">
+              <button type="button" class="view-toggle-btn active" id="listViewBtn" title="Vista Lista">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>Lista</span>
+              </button>
+              <button type="button" class="view-toggle-btn" id="calendarViewBtn" title="Vista Calendario">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Calendario</span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="filters">
+            <button class="filter-btn active" data-filter="all">Todos</button>
+            <button class="filter-btn" data-filter="importante">Importante</button>
+            <button class="filter-btn" data-filter="habito">Hábitos</button>
+            <button class="filter-btn" data-filter="tarea">Tareas</button>
+            <button class="filter-btn" data-filter="idea">Ideas</button>
+            <button class="filter-btn" data-filter="nota">Notas</button>
+          </div>
+        </div>
+        
+        <!-- Grid de Tarjetas de Recordatorios -->
+        <div class="reminders-grid" id="remindersGrid">
+          <!-- Insertado dinámicamente por JS. Se incluye estado vacío por defecto en el JS, pero aquí hay un esqueleto. -->
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <h3>¡Tu mente está libre de pendientes!</h3>
+            <p>Añade un recordatorio continuo que persistirá todos los días hasta que lo cumplas.</p>
+            <button class="btn btn-secondary btn-sm" id="emptyStateAddBtn">Crear primer recordatorio</button>
+          </div>
+        </div>
+
+        <!-- Contenedor del Calendario Mensual Interactivo -->
+        <div class="calendar-view-container hidden" id="calendarViewContainer">
+          <div class="calendar-card">
+            <div class="calendar-header">
+              <button type="button" class="calendar-nav-btn" id="prevMonthBtn" title="Mes Anterior">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <h3 class="calendar-current-month" id="calendarCurrentMonth">Mayo 2026</h3>
+              <button type="button" class="calendar-nav-btn" id="nextMonthBtn" title="Mes Siguiente">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="calendar-weekdays">
+              <div>Lun</div>
+              <div>Mar</div>
+              <div>Mié</div>
+              <div>Jue</div>
+              <div>Vie</div>
+              <div>Sáb</div>
+              <div>Dom</div>
+            </div>
+            
+            <div class="calendar-days" id="calendarDays">
+              <!-- Rellenado dinámicamente por JS -->
+            </div>
+          </div>
+          
+          <!-- Panel de Detalles del Día Seleccionado -->
+          <div class="calendar-day-details hidden" id="calendarDayDetails">
+            <div class="details-header">
+              <h4 id="selectedDayTitle">Recordatorios</h4>
+              <button type="button" class="btn btn-secondary btn-sm" id="calendarAddReminderBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Añadir recordatorio</span>
+              </button>
+            </div>
+            <div class="details-list" id="calendarDetailsList">
+              <!-- Recordatorios de este día en específico -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN: HISTORIAL DE LOGROS (LA SALIDA / HISTORIAL CUMPLIDO) -->
+      <section class="history-section">
+        <details class="history-details" id="historyDetails">
+          <summary class="history-summary">
+            <div class="summary-title-wrapper">
+              <svg class="summary-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 8v4l3 3"></path>
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+              </svg>
+              <span>Recuerdos Cumplidos (Historial de Éxitos)</span>
+            </div>
+            <span class="badge" id="historyCount">0</span>
+          </summary>
+          
+          <div class="history-content">
+            <div class="history-header">
+              <p class="history-subtitle">Registro de recordatorios implementados y cumplidos exitosamente.</p>
+              <button class="btn btn-text btn-danger btn-sm" id="clearHistoryBtn">Limpiar Historial</button>
+            </div>
+            
+            <div class="history-list" id="historyList">
+              <!-- Se rellena por JS. Estado vacío por defecto -->
+              <p class="history-empty">Aún no has cumplido ningún recordatorio. ¡Da el primer paso hoy!</p>
+            </div>
+          </div>
+        </details>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer-credits">
+      <p>&copy; 2026 Remember — Continuous reminders. Built with the latest web technology.</p>
+    </footer>
+  </div>
+
+  <!-- DIÁLOGO MODAL NATIVO PARA NUEVO RECORDATORIO -->
+  <!-- closedby="any" habilita el descarte al hacer clic en el backdrop (light-dismiss) con fallback en JS -->
+  <dialog id="reminderDialog" closedby="any" aria-labelledby="modalTitle">
+    <div class="dialog-container">
+      <div class="dialog-header">
+        <h2 id="modalTitle">Crear Recordatorio Continuo</h2>
+        <button class="dialog-close-btn" id="closeDialogBtn" aria-label="Cerrar modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="reminderForm" method="dialog">
+        <div class="form-group">
+          <label for="reminderText">¿Qué quieres recordar?</label>
+          <div class="voice-input-wrapper">
+            <textarea id="reminderText" placeholder="Ej. Implementar la pasarela de pagos, hacer 15 minutos de meditación diaria..." required rows="3" aria-describedby="voiceStatus"></textarea>
+            
+            <!-- Botón de Transcripción por Voz -->
+            <button type="button" class="voice-btn" id="voiceBtn" title="Hablar para transcribir">
+              <svg class="mic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              <!-- Ondas animadas de fondo para cuando está grabando -->
+              <span class="mic-ripple ripple-1"></span>
+              <span class="mic-ripple ripple-2"></span>
+            </button>
+          </div>
+          <!-- Estado de voz -->
+          <div class="voice-status" id="voiceStatus" aria-live="polite">
+            <span class="status-dot"></span>
+            <span class="status-text">Haz clic en el micrófono para dictar con tu voz</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Categoría</label>
+          <div class="category-selector">
+            <label class="cat-pill cat-importante" style="--accent: var(--color-importante);">
+              <input type="radio" name="category" value="importante" required>
+              <span>Importante</span>
+            </label>
+            <label class="cat-pill cat-habito" style="--accent: var(--color-habito);">
+              <input type="radio" name="category" value="habito" checked>
+              <span>Hábito</span>
+            </label>
+            <label class="cat-pill cat-tarea" style="--accent: var(--color-tarea);">
+              <input type="radio" name="category" value="tarea">
+              <span>Tarea</span>
+            </label>
+            <label class="cat-pill cat-idea" style="--accent: var(--color-idea);">
+              <input type="radio" name="category" value="idea">
+              <span>Idea</span>
+            </label>
+            <label class="cat-pill cat-nota" style="--accent: var(--color-nota);">
+              <input type="radio" name="category" value="nota">
+              <span>Nota</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Prioridad</label>
+          <div class="priority-selector">
+            <label class="priority-pill" data-priority="low">
+              <input type="radio" name="priority" value="low">
+              <span>Baja</span>
+            </label>
+            <label class="priority-pill" data-priority="medium">
+              <input type="radio" name="priority" value="medium" checked>
+              <span>Media</span>
+            </label>
+            <label class="priority-pill" data-priority="high">
+              <input type="radio" name="priority" value="high">
+              <span>Alta</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="recurrence">Frecuencia / Recurrencia</label>
+          <select id="recurrence" class="form-control">
+            <option value="none">Única vez (Recordatorio Continuo)</option>
+            <option value="daily">Hábito Diario 🔁</option>
+            <option value="weekly">Hábito Semanal 🔁</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div class="booking-toggle-wrapper">
+            <span class="booking-toggle-label">¿Programar fecha y hora? (Booking)</span>
+            <label class="switch-toggle" aria-label="Programar fecha y hora para este recordatorio">
+              <input type="checkbox" id="enableBooking">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group booking-date-group hidden" id="bookingDateGroup">
+          <label for="reminderDate">Fecha y Hora de la Reserva</label>
+          <input type="datetime-local" id="reminderDate" class="form-control">
+        </div>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" id="cancelDialogBtn">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="saveReminderBtn">
+            <span>Guardar Recordatorio</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+
+  <!-- SOUND SETTINGS DIALOG -->
+  <dialog id="soundSettingsDialog" aria-labelledby="soundSettingsTitle">
+    <div class="dialog-container" style="max-width: 480px;">
+      <div class="dialog-header">
+        <h2 id="soundSettingsTitle" style="display:flex; align-items:center; gap: 0.6rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;color:#00F2FE;flex-shrink:0;">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          Alert Tone
+        </h2>
+        <button class="dialog-close-btn" id="closeSoundSettingsBtn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <p style="color: rgba(255,255,255,0.45); font-size:0.82rem; margin: 0 0 1.25rem; line-height:1.5;">Select your preferred alert tone. Tap a tone to preview it instantly.</p>
+
+      <div id="toneList" role="radiogroup" aria-label="Alert tone options" style="display:flex; flex-direction:column; gap:0.65rem;">
+
+        <label class="tone-option" id="tone-chime" data-tone="chime">
+          <input type="radio" name="alertTone" value="chime" style="display:none;">
+          <div class="tone-icon" style="background: linear-gradient(135deg,#4f8ef7,#00c6fb);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </div>
+          <div class="tone-info">
+            <span class="tone-name">Classic Chime 🔔</span>
+            <span class="tone-desc">Soft ascending frequency sweep</span>
+          </div>
+          <div class="tone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        </label>
+
+        <label class="tone-option" id="tone-celestial" data-tone="celestial">
+          <input type="radio" name="alertTone" value="celestial" style="display:none;">
+          <div class="tone-icon" style="background: linear-gradient(135deg,#a259ff,#e040fb);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <div class="tone-info">
+            <span class="tone-name">Celestial Harmony ✨</span>
+            <span class="tone-desc">Rich polyphonic E-Major chord sweep</span>
+          </div>
+          <div class="tone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        </label>
+
+        <label class="tone-option" id="tone-sos" data-tone="sos">
+          <input type="radio" name="alertTone" value="sos" style="display:none;">
+          <div class="tone-icon" style="background: linear-gradient(135deg,#ff4757,#ff6b81);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </div>
+          <div class="tone-info">
+            <span class="tone-name">SOS Alert 🚨</span>
+            <span class="tone-desc">Rapid high-pitched Morse-code rhythm</span>
+          </div>
+          <div class="tone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        </label>
+
+        <label class="tone-option" id="tone-bell" data-tone="bell">
+          <input type="radio" name="alertTone" value="bell" style="display:none;">
+          <div class="tone-icon" style="background: linear-gradient(135deg,#f7971e,#ffd200);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          </div>
+          <div class="tone-info">
+            <span class="tone-name">Traditional Bell 🔔</span>
+            <span class="tone-desc">Deep acoustic gong with multi-harmonic decay</span>
+          </div>
+          <div class="tone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        </label>
+
+        <label class="tone-option" id="tone-cyber" data-tone="cyber">
+          <input type="radio" name="alertTone" value="cyber" style="display:none;">
+          <div class="tone-icon" style="background: linear-gradient(135deg,#00F2FE,#4FACFE);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </div>
+          <div class="tone-info">
+            <span class="tone-name">Cyber Pulse ⚡</span>
+            <span class="tone-desc">Double pitch-sweeping retro electronic chirp</span>
+          </div>
+          <div class="tone-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        </label>
+
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary" id="saveSoundSettingsBtn">Save &amp; Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Enlace al JS principal -->
+  <script src="app.js"></script>
+</body>
+</html>

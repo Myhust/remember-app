@@ -1,0 +1,47 @@
+# ── Xcode ──────────────────────────────────────────
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
+.build/
+
+# ── Android ────────────────────────────────────────
+android-app/.gradle/
+android-app/local.properties
+android-app/*/build/
+*.apk
+*.aab
+
+# ── macOS ──────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ── Node / Web ─────────────────────────────────────
+node_modules/
+npm-debug.log*
+.env
+
+# ── IDEs ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
