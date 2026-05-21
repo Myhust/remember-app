@@ -41,6 +41,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
 import com.example.acurdate.data.*
+import com.example.acurdate.notifications.NotificationHelper
 import com.example.acurdate.theme.*
 import com.example.acurdate.ui.HapticFeedbackHelper
 import com.example.acurdate.ui.SoundSynthesizer
@@ -61,7 +62,8 @@ fun MainScreen(
         val appContext = context.applicationContext
         val sound = SoundSynthesizer(appContext)
         val haptic = HapticFeedbackHelper(appContext)
-        MainScreenViewModel(JSONDataRepository(appContext), sound, haptic)
+        val notifications = NotificationHelper(appContext)
+        MainScreenViewModel(JSONDataRepository(appContext), sound, haptic, notifications)
     }
     val viewModel = realViewModel
     val state by viewModel.state.collectAsState()

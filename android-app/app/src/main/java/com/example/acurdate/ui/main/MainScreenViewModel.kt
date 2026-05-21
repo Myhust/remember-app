@@ -3,6 +3,7 @@ package com.example.acurdate.ui.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.acurdate.data.*
+import com.example.acurdate.notifications.NotificationHelper
 import com.example.acurdate.ui.HapticFeedbackHelper
 import com.example.acurdate.ui.SoundSynthesizer
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ data class MainScreenState(
 class MainScreenViewModel(
     private val repository: DataRepository,
     private val soundSynthesizer: SoundSynthesizer,
-    private val hapticHelper: HapticFeedbackHelper
+    private val hapticHelper: HapticFeedbackHelper,
+    private val notificationHelper: NotificationHelper
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(Calendar.getInstance())
@@ -106,8 +108,16 @@ class MainScreenViewModel(
                 recurrence = recurrence
             )
             repository.saveReminder(reminder)
-            
-            // Haptics & Sound feedback
+
+            if (dueDate != null) {
+                notificationHelper.scheduleAlarm(
+                    reminderId = reminder.id,
+                    text = text,
+                    category = category.name.lowercase(),
+                    dueDate = dueDate
+                )
+            }
+
             hapticHelper.vibrateTick()
             soundSynthesizer.playSelectedTone()
         }
@@ -116,8 +126,8 @@ class MainScreenViewModel(
     fun completeReminder(reminderId: String) {
         viewModelScope.launch {
             repository.completeReminder(reminderId, System.currentTimeMillis())
-            
-            // Success audio and vibration sweeps
+            notificationHelper.cancelAlarm(reminderId)
+
             hapticHelper.vibrateSuccess()
             soundSynthesizer.playCelestialChord()
         }
@@ -126,8 +136,8 @@ class MainScreenViewModel(
     fun deleteReminder(reminderId: String) {
         viewModelScope.launch {
             repository.deleteReminder(reminderId)
-            
-            // Deletion feedback
+            notificationHelper.cancelAlarm(reminderId)
+
             hapticHelper.vibrateDelete()
         }
     }
