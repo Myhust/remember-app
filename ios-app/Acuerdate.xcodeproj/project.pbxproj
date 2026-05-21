@@ -16,6 +16,8 @@
 		B11A00072C12300700C4ABAA /* PlanetWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11A00172C12300700C4ABAA /* PlanetWidget.swift */; };
 		B11A00082C12300800C4ABAA /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11A00182C12300800C4ABAA /* MainViewModel.swift */; };
 		B11A00092C12300900C4ABAA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B11A00192C12300900C4ABAA /* Assets.xcassets */; };
+		B11A00B12C12300000C4ABAA /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11A00B02C12300000C4ABAA /* SpeechRecognitionService.swift */; };
+		B11A00C12C12300000C4ABAA /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11A00C02C12300000C4ABAA /* NotificationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +31,8 @@
 		B11A00172C12300700C4ABAA /* PlanetWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanetWidget.swift; sourceTree = "<group>"; };
 		B11A00182C12300800C4ABAA /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		B11A00192C12300900C4ABAA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B11A00B02C12300000C4ABAA /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
+		B11A00C02C12300000C4ABAA /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +79,8 @@
 			children = (
 				B11A00132C12300300C4ABAA /* HapticFeedbackHelper.swift */,
 				B11A00142C12300400C4ABAA /* SoundSynthesizer.swift */,
+				B11A00B02C12300000C4ABAA /* SpeechRecognitionService.swift */,
+				B11A00C02C12300000C4ABAA /* NotificationService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -194,6 +200,8 @@
 				B11A00062C12300600C4ABAA /* CalendarView.swift in Sources */,
 				B11A00072C12300700C4ABAA /* PlanetWidget.swift in Sources */,
 				B11A00082C12300800C4ABAA /* MainViewModel.swift in Sources */,
+				B11A00B12C12300000C4ABAA /* SpeechRecognitionService.swift in Sources */,
+				B11A00C12C12300000C4ABAA /* NotificationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,6 +290,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Remember;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Acuérdate necesita el micrófono para dictar recordatorios por voz.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Acuérdate usa el reconocimiento de voz para transcribir tus recordatorios.";
+				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Acuérdate envía alertas cuando llega la hora de tus recordatorios programados.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -309,6 +320,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Remember;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Acuérdate necesita el micrófono para dictar recordatorios por voz.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Acuérdate usa el reconocimiento de voz para transcribir tus recordatorios.";
+				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Acuérdate envía alertas cuando llega la hora de tus recordatorios programados.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

@@ -100,8 +100,16 @@ class MainViewModel: ObservableObject {
         
         context.insert(reminder)
         saveChanges()
-        
-        // Haptics & Sound feedback
+
+        if let due = dueDate {
+            NotificationService.shared.scheduleAlarm(
+                reminderId: reminder.id,
+                text: text,
+                dueDate: due,
+                category: category.rawValue
+            )
+        }
+
         HapticFeedbackHelper.shared.vibrateTick()
         SoundSynthesizer.shared.playSelectedTone()
     }
@@ -122,8 +130,9 @@ class MainViewModel: ObservableObject {
             context.insert(completed)
             context.delete(reminder)
             saveChanges()
-            
-            // Success audio and vibration sweeps
+
+            NotificationService.shared.cancelAlarm(reminderId: reminderId)
+
             HapticFeedbackHelper.shared.vibrateSuccess()
             SoundSynthesizer.shared.playCelestialChord()
         }
@@ -136,8 +145,8 @@ class MainViewModel: ObservableObject {
             let reminder = reminders[idx]
             context.delete(reminder)
             saveChanges()
-            
-            // Deletion haptic feedback
+
+            NotificationService.shared.cancelAlarm(reminderId: reminder.id)
             HapticFeedbackHelper.shared.vibrateDelete()
         }
     }

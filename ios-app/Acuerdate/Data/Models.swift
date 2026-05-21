@@ -72,7 +72,7 @@ final class Reminder {
     var createdAt: Date
     var dueDate: Date?
     var recurrenceRaw: String
-    var alerted: BooleanLiteralType
+    var alerted: Bool
     
     var category: ReminderCategory {
         get { ReminderCategory(rawValue: categoryRaw) ?? .habito }

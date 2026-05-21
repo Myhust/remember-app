@@ -17,8 +17,7 @@ struct MainScreen: View {
     @State private var selectedRecurrence = ReminderRecurrence.none
     @State private var enableBooking = false
     @State private var bookingDate = Date()
-    @State private var isListening = false
-    @State private var voiceStatusText = "Haz clic en el micrófono para dictar con tu voz"
+    @StateObject private var speechService = SpeechRecognitionService()
     
     // Background colors matching the premium dark theme
     private let backgroundColor = Color(hex: "0B0C10")
@@ -511,13 +510,13 @@ struct MainScreen: View {
                                     }) {
                                         ZStack {
                                             Circle()
-                                                .fill(isListening ? Color.red.opacity(0.2) : Color.white.opacity(0.04))
+                                                .fill(speechService.isListening ? Color.red.opacity(0.2) : Color.white.opacity(0.04))
                                                 .frame(width: 44, height: 44)
-                                                .overlay(Circle().stroke(isListening ? Color.red : borderGlass, lineWidth: 1))
+                                                .overlay(Circle().stroke(speechService.isListening ? Color.red : borderGlass, lineWidth: 1))
                                             
-                                            Image(systemName: isListening ? "mic.fill" : "mic")
+                                            Image(systemName: speechService.isListening ? "mic.fill" : "mic")
                                                 .font(.system(size: 16))
-                                                .foregroundColor(isListening ? .red : Color(hex: "00F0FF"))
+                                                .foregroundColor(speechService.isListening ? .red : Color(hex: "00F0FF"))
                                         }
                                     }
                                 }
@@ -525,9 +524,9 @@ struct MainScreen: View {
                                 // Voice feedback caption
                                 HStack(spacing: 6) {
                                     Circle()
-                                        .fill(isListening ? Color.red : Color.white.opacity(0.2))
+                                        .fill(speechService.isListening ? Color.red : Color.white.opacity(0.2))
                                         .frame(width: 6, height: 6)
-                                    Text(voiceStatusText)
+                                    Text(speechService.statusText)
                                         .font(.system(size: 10))
                                         .foregroundColor(.white.opacity(0.4))
                                 }
@@ -666,28 +665,21 @@ struct MainScreen: View {
                 }
             }
             .navigationBarHidden(true)
+            .onChange(of: speechService.transcript) { _, newValue in
+                if !newValue.isEmpty { reminderText = newValue }
+            }
+            .onDisappear {
+                if speechService.isListening { speechService.stopListening() }
+            }
         }
     }
-    
-    // Toggle Voice Listening simulation
+
     private func toggleVoiceListening() {
-        if isListening {
-            isListening = false
-            voiceStatusText = "Transcripción finalizada."
+        if speechService.isListening {
+            speechService.stopListening()
         } else {
-            isListening = true
-            voiceStatusText = "Escuchando voz en tiempo real..."
-            
-            // Simulate voice dictation writing text after 2.5s
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                if isListening {
-                    isListening = false
-                    reminderText = "Llamar a los clientes importantes del proyecto"
-                    selectedCategory = .importante
-                    selectedPriority = .high
-                    voiceStatusText = "Dictado por voz finalizado."
-                }
-            }
+            speechService.transcript = ""
+            speechService.startListening()
         }
     }
     
