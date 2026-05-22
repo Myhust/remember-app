@@ -1,10 +1,11 @@
-const CACHE_NAME = 'remember-v9';
+const CACHE_NAME = 'remember-v10';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './manifest.json',
+  './icon-180.png',
   './icon-192.png',
   './icon-512.png'
 ];
